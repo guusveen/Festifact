@@ -1,0 +1,68 @@
+﻿@page "/locaties"
+@inject HttpClient httpClient
+@inject NavigationManager navigationManager
+@using Festifact.Models
+@using System.Net.Http.Json
+
+<h3>Locaties</h3>
+
+@if (locaties == null)
+{
+    <p>Loading locaties...</p>
+}
+else if (locaties.Count == 0)
+{
+    <p>No locaties found.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Adres</th>
+                <th>Zalen</th>
+                <th>Edit</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var locatie in locaties)
+            {
+                <tr>
+                    <td>@locatie.Id</td>
+                    <td>@locatie.Adres</td>
+                    <td>
+                        @if (locatie.Zalen != null && locatie.Zalen.Any())
+                        {
+                            <ul>
+                                @foreach (var zaal in locatie.Zalen)
+                                {
+                                    <li>@zaal.Naam</li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <p>No zalen found.</p>
+                        }
+                    </td>
+                    <td><a href="/edit-locatie/@locatie.Id">Edit</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Locatie> locaties;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLocaties();
+    }
+
+    private async Task LoadLocaties()
+    {
+        locaties = await httpClient.GetFromJsonAsync<List<Locatie>>("/api/Locaties");
+    }
+}

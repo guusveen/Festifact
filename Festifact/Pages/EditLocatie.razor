@@ -1,0 +1,82 @@
+﻿@page "/edit-locatie/{Id}"
+@inject HttpClient httpClient
+@inject NavigationManager navigationManager
+@using Festifact.Models
+@using Festifact.Services
+@using System.Net.Http.Json
+
+<h3>Edit Locatie</h3>
+
+@if (locatie == null)
+{
+    <p>Loading locatie...</p>
+}
+else
+{
+    <form @onsubmit="UpdateLocatieAsync">
+        <div class="form-group">
+            <label for="adres">Adres:</label>
+            <input id="adres" class="form-control" type="text" @bind="locatie.Adres" required />
+        </div>
+
+        <button class="btn btn-primary" type="submit">Update</button>
+    </form>
+
+    <h4>Zalen</h4>
+
+    @if (locatie.Zalen != null && locatie.Zalen.Any())
+    {
+        <ul>
+            @foreach (var zaal in locatie.Zalen)
+            {
+                <li>@zaal.Naam</li>
+            }
+        </ul>
+    }
+    else
+    {
+        <p>No zalen found for this locatie.</p>
+    }
+
+    <button class="btn btn-primary" @onclick="CreateZaalForLocatie">Create Zaal for Locatie</button>
+}
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="error-message">@errorMessage</div>
+}
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    private Locatie locatie = new Locatie();
+    private string errorMessage;
+
+    protected override async void OnInitialized()
+    {
+        base.OnInitialized();
+        locatie = await httpClient.GetFromJsonAsync<Locatie>($"/api/Locaties/{Id}");
+        StateHasChanged();
+    }
+
+    private async Task UpdateLocatieAsync()
+    {
+        HttpResponseMessage response = await httpClient.PutAsJsonAsync($"/api/Locaties/{Id}", locatie);
+        if (response.IsSuccessStatusCode)
+        {
+            // Handle successful update
+            navigationManager.NavigateTo("/");
+        }
+        else
+        {
+            // Handle error
+            errorMessage = "Failed to update Locatie. Please try again.";
+        }
+    }
+
+    private void CreateZaalForLocatie()
+    {
+        navigationManager.NavigateTo($"/create-zaal/{Id}");
+    }
+}

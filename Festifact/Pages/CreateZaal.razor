@@ -1,0 +1,56 @@
+﻿@page "/create-zaal/{LocatieId}"
+@inject HttpClient httpClient
+@inject NavigationManager navigationManager
+@using Festifact.Models
+@using Festifact.Services
+@using System.Net.Http.Json
+
+<h3>Create Zaal</h3>
+
+<form @onsubmit="CreateZaalAsync">
+    <div class="form-group">
+        <label for="naam">Naam:</label>
+        <input id="naam" class="form-control" type="text" @bind="zaal.Naam" required />
+    </div>
+
+    <div class="form-group">
+        <label for="capaciteit">Capaciteit:</label>
+        <input id="capaciteit" class="form-control" type="number" @bind="zaal.Capaciteit" required />
+    </div>
+
+    <button class="btn btn-primary" type="submit">Create</button>
+</form>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="error-message">@errorMessage</div>
+}
+
+@code {
+    [Parameter]
+    public string LocatieId { get; set; }
+
+    private Zaal zaal = new Zaal();
+    private string errorMessage;
+
+    private async Task CreateZaalAsync()
+    {
+        zaal.LocatieId = Int32.Parse(LocatieId);
+
+        HttpResponseMessage response = await httpClient.PostAsJsonAsync("/api/Zaals", zaal);
+        if (response.IsSuccessStatusCode)
+        {
+            // Handle successful creation
+            var createdZaal = await response.Content.ReadFromJsonAsync<Zaal>();
+            Console.WriteLine(createdZaal.Id);
+
+            navigationManager.NavigateTo($"/edit-locatie/{LocatieId}");
+        }
+        else
+        {
+            // Handle error
+            errorMessage = "Failed to create Zaal. Please try again.";
+        }
+    }
+
+}

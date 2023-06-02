@@ -1,0 +1,74 @@
+﻿@page "/edit-zaal/{Id}"
+@inject HttpClient httpClient
+@inject NavigationManager navigationManager
+@using Festifact.Models
+@using Festifact.Services
+@using System.Net.Http.Json
+
+<h3>Edit Zaal</h3>
+
+@if (zaal == null)
+{
+    <p>Loading zaal...</p>
+}
+else
+{
+    <form @onsubmit="UpdateZaalAsync">
+        <div class="form-group">
+            <label for="naam">Naam:</label>
+            <input id="naam" class="form-control" type="text" @bind="zaal.Naam" required />
+        </div>
+
+        <div class="form-group">
+            <label for="capaciteit">Capaciteit:</label>
+            <input id="capaciteit" class="form-control" type="number" @bind="zaal.Capaciteit" required />
+        </div>
+
+        <button class="btn btn-primary" type="submit">Update</button>
+    </form>
+}
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="error-message">@errorMessage</div>
+}
+
+@code {
+    private Zaal zaal;
+    private string errorMessage;
+
+    [Parameter]
+    public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadZaal();
+    }
+
+    private async Task LoadZaal()
+    {
+        try
+        {
+            zaal = await httpClient.GetFromJsonAsync<Zaal>($"/api/Zaals/{Id}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading zaal: {ex.Message}";
+        }
+    }
+
+    private async Task UpdateZaalAsync()
+    {
+        HttpResponseMessage response = await httpClient.PutAsJsonAsync($"/api/Zaals/{Id}", zaal);
+        if (response.IsSuccessStatusCode)
+        {
+            // Handle successful update
+            navigationManager.NavigateTo($"/edit-zaal/{Id}");
+        }
+        else
+        {
+            // Handle error
+            errorMessage = "Failed to update Zaal. Please try again.";
+        }
+    }
+}

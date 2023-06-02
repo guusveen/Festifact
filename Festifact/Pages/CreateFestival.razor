@@ -1,0 +1,111 @@
+﻿@page "/create-festival"
+@inject HttpClient httpClient
+@inject NavigationManager navigationManager
+@inject OrganisatorService organisatorService
+@using Festifact.Models
+@using Festifact.Services
+@using System.Net.Http.Json
+
+<h3>Create Festival</h3>
+
+<form @onsubmit="CreateFestivalAsync">
+    <div class="form-group">
+        <label for="naam">Naam:</label>
+        <input id="naam" class="form-control" type="text" @bind="festival.Naam" required />
+    </div>
+
+    <div class="form-group">
+        <label for="beschrijving">Beschrijving:</label>
+        <input id="beschrijving" class="form-control" type="text" @bind="festival.Beschrijving" required />
+    </div>
+
+    <div class="form-group">
+        <label for="bannerAfbeelding">Banner Afbeelding:</label>
+        <input id="bannerAfbeelding" class="form-control" type="text" @bind="festival.BannerAfbeelding" required />
+    </div>
+
+    <div class="form-group">
+        <label for="type">Type:</label>
+        <input id="type" class="form-control" type="text" @bind="festival.Type" required />
+    </div>
+
+    <div class="form-group">
+        <label for="genre">Genre:</label>
+        <input id="genre" class="form-control" type="text" @bind="festival.Genre" required />
+    </div>
+
+    <div class="form-group">
+        <label for="leeftijdscategorieVan">Leeftijdscategorie Van:</label>
+        <input id="leeftijdscategorieVan" class="form-control" type="number" @bind="festival.LeeftijdscategorieVan" @oninput="@(async () => await InvokeAsync(() => { StateHasChanged(); }))" required />
+    </div>
+
+    <div class="form-group">
+        <label for="leeftijdscategorieTot">Leeftijdscategorie Tot:</label>
+        <input id="leeftijdscategorieTot" class="form-control" type="number" @bind="festival.LeeftijdscategorieTot" @oninput="@(async () => await InvokeAsync(() => { StateHasChanged(); }))" required />
+    </div>
+
+    <div class="form-group">
+        <label for="startDatum">Start Datum:</label>
+        <input type="date" class="form-control" id="startDatum" @bind="festival.StartDatum" />
+    </div>
+
+    <div class="form-group">
+        <label for="eindDatum">Eind Datum:</label>
+        <input type="date" class="form-control" id="eindDatum" @bind="festival.EindDatum" />
+    </div>
+
+    @if (organisators != null)
+    {
+        <div class="form-group">
+            <label for="organisator">Organisator:</label>
+            <select id="organisator" class="form-control" @bind="festival.OrganisatorId" @oninput="@(async () => await InvokeAsync(() => { StateHasChanged(); }))" required>
+                <option value="" selected></option>
+                @foreach (var organisator in organisators)
+                {
+                    <option value="@organisator.Id">@organisator.Name</option>
+                }
+            </select>
+        </div>
+    }
+    else
+    {
+        <div>geen organisatoren.</div>
+    }
+    <button class="btn btn-primary" type="submit">Create</button>
+</form>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="error-message">@errorMessage</div>
+}
+
+@code {
+    private Festival festival = new Festival();
+    private string errorMessage;
+    private List<Organisator> organisators;
+
+    protected override async void OnInitialized()
+    {
+        base.OnInitialized();
+        organisators = await organisatorService.GetOrganisatorsAsync();
+        StateHasChanged();
+    }
+
+    private async Task CreateFestivalAsync()
+    {
+        HttpResponseMessage response = await httpClient.PostAsJsonAsync("/api/Festivals", festival);
+        if (response.IsSuccessStatusCode)
+        {
+            // Handle successful creation
+            var createdFestival = await response.Content.ReadFromJsonAsync<Festival>();
+            Console.WriteLine(createdFestival.Id);
+            navigationManager.NavigateTo($"/edit-festival/{createdFestival.Id}");
+        }
+        else
+        {
+            // Handle error
+            errorMessage = "Failed to create Festival. Please try again.";
+        }
+    }
+
+}

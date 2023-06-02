@@ -1,0 +1,70 @@
+﻿@page "/create-artiest"
+@inject HttpClient httpClient
+@inject NavigationManager navigationManager
+@inject OrganisatorService organisatorService
+@using Festifact.Models
+@using Festifact.Services
+@using System.Net.Http.Json
+
+<h3>Artiest aanmaken</h3>
+
+<form @onsubmit="CreateArtiestAsync">
+    <div class="form-group">
+        <label for="naam">Naam:</label>
+        <input id="naam" class="form-control" type="text" @bind="artiest.Naam" required />
+    </div>
+
+    <div class="form-group">
+        <label for="beschrijving">Beschrijving:</label>
+        <input id="beschrijving" class="form-control" type="text" @bind="artiest.Beschrijving" required />
+    </div>
+
+    <div class="form-group">
+        <label for="afbeelding">Afbeelding:</label>
+        <input id="afbeelding" class="form-control" type="text" @bind="artiest.Afbeelding" required />
+    </div>
+
+    <div class="form-group">
+        <label for="landVanHerkomst">Land van Herkomst:</label>
+        <input id="landVanHerkomst" class="form-control" type="text" @bind="artiest.LandVanHerkomst" required />
+    </div>
+
+    <div class="form-group">
+        <label for="type">Type:</label>
+        <input id="type" class="form-control" type="text" @bind="artiest.Type" required />
+    </div>
+
+    <div class="form-group">
+        <label for="genre">Genre:</label>
+        <input id="genre" class="form-control" type="text" @bind="artiest.Genre" required />
+    </div>
+
+    <button class="btn btn-primary" type="submit">Aanmaken</button>
+</form>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="error-message">@errorMessage</div>
+}
+
+@code {
+    private Artiest artiest = new Artiest();
+    private string errorMessage;
+
+    private async Task CreateArtiestAsync()
+    {
+        HttpResponseMessage response = await httpClient.PostAsJsonAsync("/api/Artiesten", artiest);
+        if (response.IsSuccessStatusCode)
+        {
+            // Handle successful creation
+            var createdArtiest = await response.Content.ReadFromJsonAsync<Artiest>();
+            Console.WriteLine(createdArtiest.Id);
+            navigationManager.NavigateTo($"/edit-artiest/{createdArtiest.Id}");
+        }
+        else
+        {
+            // Handle error
+            errorMessage = "Het aanmaken van de artiest is mislukt. Probeer het opnieuw.";
+        }
+    }
+}
