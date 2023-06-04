@@ -15,6 +15,10 @@ else
 {
     <form @onsubmit="UpdateLocatieAsync">
         <div class="form-group">
+            <label for="locatieNaam">Naam:</label>
+            <input id="locatieNaam" class="form-control" type="text" @bind="locatie.Naam" required />
+        </div>
+        <div class="form-group">
             <label for="adres">Adres:</label>
             <input id="adres" class="form-control" type="text" @bind="locatie.Adres" required />
         </div>
@@ -26,10 +30,16 @@ else
 
     @if (locatie.Zalen != null && locatie.Zalen.Any())
     {
-        <ul>
+        <ul class="list-group">
             @foreach (var zaal in locatie.Zalen)
             {
-                <li>@zaal.Naam</li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>@zaal.Naam</span>
+                    <div>
+                        <button class="btn btn-link text-danger" @onclick="@(async () => await DeleteZaalAsync(zaal.Id))">Delete</button>
+                        <button class="btn btn-link" @onclick="@(async () => await GoToEditZaal(zaal.Id))">Edit</button>
+                    </div>
+                </li>
             }
         </ul>
     }
@@ -66,7 +76,7 @@ else
         if (response.IsSuccessStatusCode)
         {
             // Handle successful update
-            navigationManager.NavigateTo("/");
+            navigationManager.NavigateTo("locaties");
         }
         else
         {
@@ -78,5 +88,32 @@ else
     private void CreateZaalForLocatie()
     {
         navigationManager.NavigateTo($"/create-zaal/{Id}");
+    }
+
+    private async Task DeleteZaalAsync(int? zaalId)
+    {
+        if (zaalId != null)
+        {
+            HttpResponseMessage response = await httpClient.DeleteAsync($"/api/Zaals/{zaalId}");
+            if (response.IsSuccessStatusCode)
+            {
+                // Handle successful deletion
+                locatie.Zalen?.Remove(locatie.Zalen.FirstOrDefault(z => z.Id == zaalId));
+                StateHasChanged();
+            }
+            else
+            {
+                // Handle error
+                errorMessage = "Failed to delete Zaal. Please try again.";
+            }
+        }
+    }
+
+    private async Task GoToEditZaal(int? zaalId)
+    {
+        if (zaalId != null)
+        {
+            navigationManager.NavigateTo($"/edit-zaal/{zaalId}");
+        }
     }
 }

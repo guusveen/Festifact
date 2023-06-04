@@ -8,56 +8,94 @@
 
 <h3>Edit Festival</h3>
 
-<form @onsubmit="UpdateFestivalAsync">
+<form @onsubmit="UpdateFestivalAsync" class="needs-validation" novalidate>
+    <div class="form-group">
+        <button class="btn btn-secondary" @onclick="GoToCreateVoorstelling">Maak voorstelling</button>
+    </div>
+
     <div class="form-group">
         <label for="naam">Naam:</label>
         <input id="naam" class="form-control" type="text" @bind="festival.Naam" required />
+        <div class="invalid-feedback">Naam is verplicht.</div>
     </div>
 
-    <div class ="form-group">
+    <div class="form-group">
         <label for="beschrijving">Beschrijving:</label>
         <input id="beschrijving" class="form-control" type="text" @bind="festival.Beschrijving" required />
-    </div >
+        <div class="invalid-feedback">Beschrijving is verplicht.</div>
+    </div>
 
     <div class="form-group">
         <label for="bannerAfbeelding">Banner Afbeelding:</label>
         <input id="bannerAfbeelding" class="form-control" type="text" @bind="festival.BannerAfbeelding" required />
+        <div class="invalid-feedback">Banner Afbeelding is verplicht.</div>
     </div>
+
     <div class="form-group">
-        <img src="@festival.BannerAfbeelding" alt="Festival Banner" />
+        <img src="@festival.BannerAfbeelding" alt="Festival Banner" class="img-fluid" />
     </div>
 
     <div class="form-group">
         <label for="type">Type:</label>
         <input id="type" class="form-control" type="text" @bind="festival.Type" required />
+        <div class="invalid-feedback">Type is verplicht.</div>
     </div>
 
     <div class="form-group">
         <label for="genre">Genre:</label>
         <input id="genre" class="form-control" type="text" @bind="festival.Genre" required />
+        <div class="invalid-feedback">Genre is verplicht.</div>
     </div>
 
     <div class="form-group">
         <label for="leeftijdscategorieVan">Leeftijdscategorie Van:</label>
-        <input id="leeftijdscategorieVan" class="form-control" type="number" @bind="festival.LeeftijdscategorieVan" @oninput="@(async () => await InvokeAsync(() => { StateHasChanged(); }))" required />
+        <input id="leeftijdscategorieVan" class="form-control" type="number" @bind="festival.LeeftijdscategorieVan" />
     </div>
 
     <div class="form-group">
         <label for="leeftijdscategorieTot">Leeftijdscategorie Tot:</label>
-        <input id="leeftijdscategorieTot" class="form-control" type="number" @bind="festival.LeeftijdscategorieTot" @oninput="@(async () => await InvokeAsync(() => { StateHasChanged(); }))" required />
+        <input id="leeftijdscategorieTot" class="form-control" type="number" @bind="festival.LeeftijdscategorieTot" />
     </div>
 
     <div class="form-group">
         <label for="startDatum">Start Datum:</label>
-        <input type="date" class="form-control" id="startDatum" @bind="festival.StartDatum" />
+        <input type="date" class="form-control" id="startDatum" @bind="festival.StartDatum" required />
+        <div class="invalid-feedback">Start Datum is verplicht.</div>
     </div>
 
     <div class="form-group">
         <label for="eindDatum">Eind Datum:</label>
-        <input type="date" class="form-control" id="eindDatum" @bind="festival.EindDatum" />
+        <input type="date" class="form-control" id="eindDatum" @bind="festival.EindDatum" required />
+        <div class="invalid-feedback">Eind Datum is verplicht.</div>
     </div>
 
-    <button class="btn btn-secondary" @onclick="GoToCreateVoorstelling">Maak voorstelling</button>
+    @if (festival.Locaties != null)
+    {
+        <div class="form-group">
+            <label for="locaties">Locaties:</label>
+            <select id="locaties" class="form-control" multiple required @onchange="HandleLocatiesSelection">
+                @foreach (var locatie in locaties)
+                {
+                    bool isSelected = festival.Locaties?.Any(l => l.Id == locatie.Id) ?? false;
+                    <option value="@locatie.Id" selected="@isSelected">@locatie.Naam</option>
+                }
+            </select>
+            <div class="invalid-feedback">Locaties is verplicht.</div>
+        </div>
+    }
+
+    @if (festival.Voorstellingen != null && festival.Voorstellingen.Any())
+    {
+        <div class="form-group">
+            <label for="voorstellingen">Voorstellingen:</label>
+            <ul>
+                @foreach (var voorstelling in festival.Voorstellingen)
+                {
+                    <li>@voorstelling.Naam <button class="btn btn-link" @onclick="() => GoToEditVoorstelling(voorstelling.Id ?? 0)">Edit</button></li>
+                }
+            </ul>
+        </div>
+    }
 
     <button class="btn btn-primary" type="submit">Update</button>
 </form>
@@ -74,32 +112,70 @@
     private Festival festival = new Festival();
     private string errorMessage;
     private List<Organisator> organisators;
+    private List<int> selectedLocatieIds = new List<int>();
+    private List<Locatie> locaties;
 
     protected override async void OnInitialized()
     {
         base.OnInitialized();
         festival = await httpClient.GetFromJsonAsync<Festival>($"/api/Festivals/{Id}");
         organisators = await organisatorService.GetOrganisatorsAsync();
+        locaties = await httpClient.GetFromJsonAsync<List<Locatie>>("/api/Locaties");
         StateHasChanged();
     }
 
     private async Task UpdateFestivalAsync()
     {
-        HttpResponseMessage response = await httpClient.PatchAsJsonAsync($"/api/Festivals/{Id}", festival);
-        if (response.IsSuccessStatusCode)
+        festival.Locaties = locaties.Where(locatie => selectedLocatieIds.Contains(locatie.Id ?? 0)).ToList();
+
+        if (festival.Locaties.Any())
         {
-            // Handle successful update
-            navigationManager.NavigateTo("/");
+            Console.WriteLine($"Error Status Code: {festival}");
+            HttpResponseMessage response = await httpClient.PutAsJsonAsync($"/api/Festivals/{Id}", festival);
+            if (response.IsSuccessStatusCode)
+            {
+                // Handle successful update
+                navigationManager.NavigateTo("/");
+            }
+            else
+            {
+                // Handle error
+                errorMessage = "Failed to update Festival. Please try again.";
+
+                // Logging error status code and message
+                Console.WriteLine($"Error Status Code: {response}");
+                string errorContent = await response.Content.ReadAsStringAsync();
+            }
         }
         else
         {
-            // Handle error
-            errorMessage = "Failed to update Festival. Please try again.";
+            // Handle case when festival.Locaties is empty
+            errorMessage = "Locaties cannot be empty. Please select at least one locatie.";
         }
     }
 
     private void GoToCreateVoorstelling()
     {
-        
+        navigationManager.NavigateTo($"/create-voorstelling/{Id}");
+    }
+
+    private async Task GoToEditVoorstelling(int voorstellingId)
+    {
+        navigationManager.NavigateTo($"/edit-voorstelling/{voorstellingId}");
+    }
+
+    private async Task HandleLocatiesSelection(ChangeEventArgs e)
+    {
+        if (e.Value is string[] selectedIds)
+        {
+            selectedLocatieIds = selectedIds.Select(id => int.Parse(id)).ToList();
+            festival.Locaties = locaties.Where(locatie => selectedLocatieIds.Contains(locatie.Id ?? 0)).ToList();
+        }
+    }
+
+    private bool IsLocatieSelected(Locatie locatie)
+    {
+        Console.WriteLine(locatie.Id ?? 0);
+        return selectedLocatieIds.Contains(locatie.Id ?? 0);
     }
 }

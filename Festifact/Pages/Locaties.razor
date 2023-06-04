@@ -6,6 +6,10 @@
 
 <h3>Locaties</h3>
 
+<p>
+    <button class="btn btn-primary" @onclick="CreateNewLocatie">Create New Locatie</button>
+</p>
+
 @if (locaties == null)
 {
     <p>Loading locaties...</p>
@@ -19,7 +23,7 @@ else
     <table class="table">
         <thead>
             <tr>
-                <th>ID</th>
+                <th>Naam</th>
                 <th>Adres</th>
                 <th>Zalen</th>
                 <th>Edit</th>
@@ -29,7 +33,7 @@ else
             @foreach (var locatie in locaties)
             {
                 <tr>
-                    <td>@locatie.Id</td>
+                    <td>@locatie.Naam</td>
                     <td>@locatie.Adres</td>
                     <td>
                         @if (locatie.Zalen != null && locatie.Zalen.Any())
@@ -59,10 +63,16 @@ else
     protected override async Task OnInitializedAsync()
     {
         await LoadLocaties();
+        StateHasChanged();
     }
 
     private async Task LoadLocaties()
     {
         locaties = await httpClient.GetFromJsonAsync<List<Locatie>>("/api/Locaties");
+    }
+
+    private void CreateNewLocatie()
+    {
+        navigationManager.NavigateTo("/create-locatie");
     }
 }

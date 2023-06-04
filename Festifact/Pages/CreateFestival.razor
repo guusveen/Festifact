@@ -1,75 +1,83 @@
 ﻿@page "/create-festival"
 @inject HttpClient httpClient
 @inject NavigationManager navigationManager
-@inject OrganisatorService organisatorService
 @using Festifact.Models
 @using Festifact.Services
 @using System.Net.Http.Json
 
 <h3>Create Festival</h3>
 
-<form @onsubmit="CreateFestivalAsync">
+<form @onsubmit="CreateFestivalAsync" class="needs-validation" novalidate>
     <div class="form-group">
         <label for="naam">Naam:</label>
         <input id="naam" class="form-control" type="text" @bind="festival.Naam" required />
+        <div class="invalid-feedback">Naam is verplicht.</div>
     </div>
 
     <div class="form-group">
         <label for="beschrijving">Beschrijving:</label>
         <input id="beschrijving" class="form-control" type="text" @bind="festival.Beschrijving" required />
+        <div class="invalid-feedback">Beschrijving is verplicht.</div>
     </div>
 
     <div class="form-group">
         <label for="bannerAfbeelding">Banner Afbeelding:</label>
         <input id="bannerAfbeelding" class="form-control" type="text" @bind="festival.BannerAfbeelding" required />
+        <div class="invalid-feedback">Banner Afbeelding is verplicht.</div>
     </div>
 
     <div class="form-group">
         <label for="type">Type:</label>
         <input id="type" class="form-control" type="text" @bind="festival.Type" required />
+        <div class="invalid-feedback">Type is verplicht.</div>
     </div>
 
     <div class="form-group">
         <label for="genre">Genre:</label>
         <input id="genre" class="form-control" type="text" @bind="festival.Genre" required />
+        <div class="invalid-feedback">Genre is verplicht.</div>
     </div>
 
     <div class="form-group">
         <label for="leeftijdscategorieVan">Leeftijdscategorie Van:</label>
-        <input id="leeftijdscategorieVan" class="form-control" type="number" @bind="festival.LeeftijdscategorieVan" @oninput="@(async () => await InvokeAsync(() => { StateHasChanged(); }))" required />
+        <input id="leeftijdscategorieVan" class="form-control" type="number" @bind="festival.LeeftijdscategorieVan" required />
+        <div class="invalid-feedback">Leeftijdscategorie Van is verplicht.</div>
     </div>
 
     <div class="form-group">
         <label for="leeftijdscategorieTot">Leeftijdscategorie Tot:</label>
-        <input id="leeftijdscategorieTot" class="form-control" type="number" @bind="festival.LeeftijdscategorieTot" @oninput="@(async () => await InvokeAsync(() => { StateHasChanged(); }))" required />
+        <input id="leeftijdscategorieTot" class="form-control" type="number" @bind="festival.LeeftijdscategorieTot" required />
+        <div class="invalid-feedback">Leeftijdscategorie Tot is verplicht.</div>
     </div>
 
     <div class="form-group">
         <label for="startDatum">Start Datum:</label>
-        <input type="date" class="form-control" id="startDatum" @bind="festival.StartDatum" />
+        <input type="date" class="form-control" id="startDatum" @bind="festival.StartDatum" required />
+        <div class="invalid-feedback">Start Datum is verplicht.</div>
     </div>
 
     <div class="form-group">
         <label for="eindDatum">Eind Datum:</label>
-        <input type="date" class="form-control" id="eindDatum" @bind="festival.EindDatum" />
+        <input type="date" class="form-control" id="eindDatum" @bind="festival.EindDatum" required />
+        <div class="invalid-feedback">Eind Datum is verplicht.</div>
     </div>
-
-    @if (organisators != null)
+    
+    @if (locaties != null)
     {
         <div class="form-group">
-            <label for="organisator">Organisator:</label>
-            <select id="organisator" class="form-control" @bind="festival.OrganisatorId" @oninput="@(async () => await InvokeAsync(() => { StateHasChanged(); }))" required>
-                <option value="" selected></option>
-                @foreach (var organisator in organisators)
+            <label for="locaties">Locaties:</label>
+                <select id="locaties" class="form-control" multiple required>
+                @foreach (var locatie in locaties)
                 {
-                    <option value="@organisator.Id">@organisator.Name</option>
+                    <option value="@locatie.Id" selected="@IsLocatieSelected(locatie)" @onchange="HandleLocatieSelection">@locatie.Naam</option>
                 }
-            </select>
+                </select>
+            <div class="invalid-feedback">Locaties is verplicht.</div>
         </div>
     }
     else
     {
-        <div>geen organisatoren.</div>
+        <div>No locaties found.</div>
     }
     <button class="btn btn-primary" type="submit">Create</button>
 </form>
@@ -81,24 +89,24 @@
 
 @code {
     private Festival festival = new Festival();
+    private List<int> selectedLocatieIds = new List<int>();
     private string errorMessage;
-    private List<Organisator> organisators;
+    private List<Locatie> locaties;
 
-    protected override async void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
-        organisators = await organisatorService.GetOrganisatorsAsync();
-        StateHasChanged();
+        locaties = await httpClient.GetFromJsonAsync<List<Locatie>>("/api/Locaties");
     }
 
     private async Task CreateFestivalAsync()
     {
+        festival.Locaties = locaties.Where(l => selectedLocatieIds.Contains(l.Id ?? 0)).ToList();
+
         HttpResponseMessage response = await httpClient.PostAsJsonAsync("/api/Festivals", festival);
         if (response.IsSuccessStatusCode)
         {
             // Handle successful creation
             var createdFestival = await response.Content.ReadFromJsonAsync<Festival>();
-            Console.WriteLine(createdFestival.Id);
             navigationManager.NavigateTo($"/edit-festival/{createdFestival.Id}");
         }
         else
@@ -108,4 +116,14 @@
         }
     }
 
+    private bool IsLocatieSelected(Locatie locatie)
+    {
+        return selectedLocatieIds.Contains(locatie.Id ?? 0);
+    }
+
+    private void HandleLocatieSelection(ChangeEventArgs e)
+    {
+        var selectedValues = e.Value.ToString().Split(',');
+        selectedLocatieIds = selectedValues.Select(int.Parse).ToList();
+    }
 }

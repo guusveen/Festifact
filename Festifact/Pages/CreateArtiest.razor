@@ -58,7 +58,6 @@
         {
             // Handle successful creation
             var createdArtiest = await response.Content.ReadFromJsonAsync<Artiest>();
-            Console.WriteLine(createdArtiest.Id);
             navigationManager.NavigateTo($"/edit-artiest/{createdArtiest.Id}");
         }
         else

@@ -9,8 +9,12 @@
 
 <form @onsubmit="CreateLocatieAsync">
     <div class="form-group">
-        <label for="adres">Adres:</label>
-        <input id="adres" class="form-control" type="text" @bind="locatie.Adres" required />
+        <label for="locatieNaam">Naam:</label>
+        <input id="locatieNaam" class="form-control" type="text" @bind="locatie.Naam" required />
+    </div>
+    <div class="form-group">
+        <label for="locatieAdres">Adres:</label>
+        <input id="locatieAdres" class="form-control" type="text" @bind="locatie.Adres" required />
     </div>
 
     <button class="btn btn-primary" type="submit">Create</button>
@@ -32,7 +36,6 @@
         {
             // Handle successful creation
             var createdLocatie = await response.Content.ReadFromJsonAsync<Locatie>();
-            Console.WriteLine(createdLocatie.Id);
             navigationManager.NavigateTo($"/edit-locatie/{createdLocatie.Id}");
         }
         else

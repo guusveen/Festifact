@@ -1,0 +1,67 @@
+﻿@page "/organisator-artiesten"
+@inject HttpClient httpClient
+@inject NavigationManager navigationManager
+@using Festifact.Models
+@using System.Net.Http.Json
+
+<h3>Organisator - Artiesten</h3>
+
+<button class="btn btn-primary" @onclick="GoToCreateArtiestPage">Create Artiest</button>
+
+@if (artiesten == null)
+{
+    <p>Loading artiesten...</p>
+}
+else if (artiesten.Count == 0)
+{
+    <p>No artiesten found.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Naam</th>
+                <th>Beschrijving</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var artiest in artiesten)
+            {
+                <tr>
+                    <td>@artiest.Naam</td>
+                    <td>@artiest.Beschrijving</td>
+                    <td>
+                        <button class="btn btn-primary" @onclick="() => GoToEditArtiestPage(artiest.Id ?? 0)">Edit</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="error-message">@errorMessage</div>
+}
+
+@code {
+    private List<Artiest> artiesten;
+    private string errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        artiesten = await httpClient.GetFromJsonAsync<List<Artiest>>("/api/Artiesten");
+    }
+
+    private void GoToCreateArtiestPage()
+    {
+        navigationManager.NavigateTo("/create-artiest");
+    }
+
+    private void GoToEditArtiestPage(int id)
+    {
+        navigationManager.NavigateTo($"/edit-artiest/{id}");
+    }
+}

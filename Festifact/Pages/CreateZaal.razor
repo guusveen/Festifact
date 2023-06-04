@@ -42,7 +42,6 @@
         {
             // Handle successful creation
             var createdZaal = await response.Content.ReadFromJsonAsync<Zaal>();
-            Console.WriteLine(createdZaal.Id);
 
             navigationManager.NavigateTo($"/edit-locatie/{LocatieId}");
         }

@@ -1,0 +1,178 @@
+﻿@page "/edit-voorstelling/{id}"
+@inject HttpClient httpClient
+@inject NavigationManager navigationManager
+@using Festifact.Models
+@using Festifact.Services
+@using System.Net.Http.Json
+
+<h3>Edit Voorstelling</h3>
+
+@if (voorstelling == null)
+{
+    <p>Loading voorstelling failed.</p>
+}
+else
+{
+    <form @onsubmit="UpdateVoorstellingAsync">
+
+        <div class="form-group">
+            <label for="artiest">Artiest:</label>
+            <select id="artiest" class="form-control" @bind="voorstelling.ArtiestId">
+                @if (voorstelling.Artiest?.Id == null)
+                {
+                    <option value="" selected></option>
+                }
+                else
+                {
+                    <option value="@voorstelling.Artiest.Id" selected>@voorstelling.Artiest.Naam</option>
+                }
+
+                @if (beschikbareArtiesten != null)
+                {
+                    @foreach (var artiest in beschikbareArtiesten)
+                    {
+                        <option value="@artiest.Id">@artiest.Naam</option>
+                    }
+                }
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="zaal">Zaal:</label>
+            <select id="zaal" class="form-control" @bind="voorstelling.ZaalId" required>
+                @if (voorstelling.Zaal == null)
+                {
+                    <option value="" selected></option>
+                }
+                else
+                {
+                    <option value="@voorstelling.Zaal.Id" selected>@voorstelling.Zaal.Naam</option>
+                }
+                @if (zalen != null)
+                {
+                    @foreach (var zaal in zalen)
+                    {
+                        if (IsZaalUnavailable(zaal, voorstelling.StartTijd, voorstelling.EindTijd))
+                        {
+                            <option value="@zaal.Id" disabled>@zaal.Naam (Unavailable)</option>
+                        }
+                        else
+                        {
+                            <option value="@zaal.Id">@zaal.Naam</option>
+                        }
+                    }
+                }
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="naam">Naam:</label>
+            <input id="naam" class="form-control" type="text" @bind="voorstelling.Naam" required />
+        </div>
+
+        <div class="form-group">
+            <label for="beschrijving">Beschrijving:</label>
+            <input id="beschrijving" class="form-control" type="text" @bind="voorstelling.Beschrijving" required />
+        </div>
+
+        <div class="form-group">
+            <label for="afbeelding">Afbeelding:</label>
+            <input id="afbeelding" class="form-control" type="text" @bind="voorstelling.Afbeelding" required />
+        </div>
+
+        <div class="form-group">
+            <label for="startTijd">Start Tijd:</label>
+            <input type="datetime-local" class="form-control" id="startTijd" @bind="voorstelling.StartTijd" min="@GetMinDateTime(festival.StartDatum)" max="@GetMaxDateTime(festival.EindDatum)" required />
+        </div>
+
+        <div class="form-group">
+            <label for="eindTijd">Eind Tijd:</label>
+            <input type="datetime-local" class="form-control" id="eindTijd" @bind="voorstelling.EindTijd" min="@GetMinDateTime(festival.StartDatum)" max="@GetMaxDateTime(festival.EindDatum)" required />
+        </div
+
+        <button class="btn btn-primary" type="submit">Update</button>
+    </form>
+}
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="error-message">@errorMessage</div>
+}
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    private Voorstelling voorstelling;
+    private List<Zaal> zalen;
+    private Festival festival;
+    private List<Artiest> beschikbareArtiesten;
+    private string errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            voorstelling = await httpClient.GetFromJsonAsync<Voorstelling>($"/api/Voorstellings/{Id}");
+
+            if (voorstelling != null)
+            {
+                festival = await httpClient.GetFromJsonAsync<Festival>($"/api/Festivals/{voorstelling.FestivalId}");
+
+                if (festival != null && festival.Locaties != null)
+                {
+                    zalen = festival.Locaties
+                        .Where(locatie => locatie.Zalen != null)
+                        .SelectMany(locatie => locatie.Zalen)
+                        .Where(zaal => !IsZaalUnavailable(zaal, voorstelling.StartTijd, voorstelling.EindTijd))
+                        .ToList();
+                }
+
+                beschikbareArtiesten = await httpClient.GetFromJsonAsync<List<Artiest>>($"/api/Artiesten/AvailableArtiesten/{Id}");
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "An error occurred while loading the voorstelling.";
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    private string GetMinDateTime(DateTime? startDatum)
+    {
+        return startDatum?.ToString("yyyy-MM-ddTHH:mm") ?? string.Empty;
+    }
+
+    private string GetMaxDateTime(DateTime? eindDatum)
+    {
+        if (eindDatum.HasValue)
+        {
+            // Add one day to include the entire last day
+            var maxEindDatum = eindDatum.Value.AddDays(1);
+            return maxEindDatum.ToString("yyyy-MM-ddTHH:mm");
+        }
+
+        return string.Empty;
+    }
+
+    private async Task UpdateVoorstellingAsync()
+    {
+        HttpResponseMessage response = await httpClient.PutAsJsonAsync($"/api/Voorstellings/{voorstelling.Id}", voorstelling);
+        if (response.IsSuccessStatusCode)
+        {
+            // Handle successful update
+            navigationManager.NavigateTo($"/edit-festival/{voorstelling.FestivalId}");
+        }
+        else
+        {
+            // Handle error
+            errorMessage = "Failed to update Voorstelling. Please try again.";
+        }
+    }
+
+    private bool IsZaalUnavailable(Zaal zaal, DateTime? startTijd, DateTime? eindTijd)
+    {
+        return zaal.Voorstellingen.Any(v => (v.StartTijd < eindTijd && v.EindTijd > startTijd));
+    }
+}

@@ -1,0 +1,66 @@
+﻿@page "/organisator-festivals"
+@inject HttpClient httpClient
+@inject NavigationManager navigationManager
+@using Festifact.Models
+@using System.Net.Http.Json
+
+<h3>Festivals</h3>
+
+<p>
+    <button class="btn btn-primary" @onclick="CreateNewFestival">Create New Festival</button>
+</p>
+
+@if (festivals == null)
+{
+    <p>Loading festivals...</p>
+}
+else if (festivals.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Naam</th>
+                <th>Type</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var festival in festivals)
+            {
+                <tr>
+                    <td>@festival.Naam</td>
+                    <td>@festival.Type</td>
+                    <td>
+                        <button class="btn btn-primary" @onclick="() => GoToEditFestival(festival.Id ?? 0)">Edit</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No festivals found.</p>
+}
+
+@code {
+    private List<Festival> festivals;
+
+    protected override async Task OnInitializedAsync()
+    {
+        festivals = await httpClient.GetFromJsonAsync<List<Festival>>("/api/Festivals");
+    }
+
+    private void GoToEditFestival(int festivalId)
+    {
+        if (festivalId != 0)
+        {
+            navigationManager.NavigateTo($"/edit-festival/{festivalId}");
+        }
+    }
+
+    private void CreateNewFestival()
+    {
+        navigationManager.NavigateTo("/create-festival");
+    }
+}

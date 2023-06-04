@@ -1,11 +1,110 @@
-﻿@page "/create-voorstelling"
+﻿@page "/create-voorstelling/{festivalId}"
 @inject HttpClient httpClient
 @inject NavigationManager navigationManager
-@using System.Net.Http.Json
 @using Festifact.Models
+@using Festifact.Services
+@using System.Net.Http.Json
 
-<h3>CreateVoorstelling</h3>
+<h3>Create Voorstelling</h3>
+
+@if (festival == null)
+{
+    <p>Loading festival failed.</p>
+}
+else
+{
+    <form @onsubmit="CreateVoorstellingAsync">
+        <div class="form-group">
+            <label for="naam">Naam:</label>
+            <input id="naam" class="form-control" type="text" @bind="voorstelling.Naam" required />
+        </div>
+
+        <div class="form-group">
+            <label for="beschrijving">Beschrijving:</label>
+            <input id="beschrijving" class="form-control" type="text" @bind="voorstelling.Beschrijving" required />
+        </div>
+
+        <div class="form-group">
+            <label for="afbeelding">Afbeelding:</label>
+            <input id="afbeelding" class="form-control" type="text" @bind="voorstelling.Afbeelding" required />
+        </div>
+
+        <div class="form-group">
+            <label for="startTijd">Start Tijd:</label>
+            <input type="datetime-local" class="form-control" id="startTijd" @bind="voorstelling.StartTijd" min="@GetMinDateTime(festival.StartDatum)" max="@GetMaxDateTime(festival.EindDatum)" required />
+        </div>
+
+        <div class="form-group">
+            <label for="eindTijd">Eind Tijd:</label>
+            <input type="datetime-local" class="form-control" id="eindTijd" @bind="voorstelling.EindTijd" min="@GetMinDateTime(festival.StartDatum)" max="@GetMaxDateTime(festival.EindDatum)" required />
+        </div>
+
+        <button class="btn btn-primary" type="submit">Create</button>
+    </form>
+}
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="error-message">@errorMessage</div>
+}
 
 @code {
+    [Parameter]
+    public string FestivalId { get; set; }
 
+    private Voorstelling voorstelling = new Voorstelling();
+    private Festival festival;
+    private string errorMessage;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            festival = await httpClient.GetFromJsonAsync<Festival>($"/api/Festivals/{FestivalId}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "An error occurred while loading the festival.";
+            Console.WriteLine(ex.Message);
+        }
+
+        StateHasChanged();
+    }
+
+
+    private string GetMinDateTime(DateTime? startDatum)
+    {
+        return startDatum?.ToString("yyyy-MM-ddTHH:mm") ?? string.Empty;
+    }
+
+    private string GetMaxDateTime(DateTime? eindDatum)
+    {
+        if (eindDatum.HasValue)
+        {
+            // Add one day to include the entire last day
+            var maxEindDatum = eindDatum.Value.AddDays(1);
+            return maxEindDatum.ToString("yyyy-MM-ddTHH:mm");
+        }
+
+        return string.Empty;
+    }
+
+    private async Task CreateVoorstellingAsync()
+    {
+        voorstelling.FestivalId = int.Parse(FestivalId);
+
+        HttpResponseMessage response = await httpClient.PostAsJsonAsync("/api/Voorstellings", voorstelling);
+        if (response.IsSuccessStatusCode)
+        {
+            // Handle successful creation
+            var createdVoorstelling = await response.Content.ReadFromJsonAsync<Voorstelling>();
+            navigationManager.NavigateTo($"/edit-Voorstelling/{createdVoorstelling.Id}");
+        }
+        else
+        {
+            // Handle error
+            errorMessage = "Failed to create Voorstelling. Please try again.";
+        }
+    }
 }

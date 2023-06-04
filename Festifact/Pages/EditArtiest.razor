@@ -1,0 +1,81 @@
+﻿@page "/edit-artiest/{Id}"
+@inject HttpClient httpClient
+@inject NavigationManager navigationManager
+@using Festifact.Models
+@using System.Net.Http.Json
+
+<h3>Edit Artiest</h3>
+
+@if (artiest == null)
+{
+    <p>Loading artist...</p>
+}
+else
+{
+    <form @onsubmit="UpdateArtiestAsync">
+        <div class="form-group">
+            <label for="naam">Naam:</label>
+            <input id="naam" class="form-control" type="text" @bind="artiest.Naam" required />
+        </div>
+
+        <div class="form-group">
+            <label for="beschrijving">Beschrijving:</label>
+            <input id="beschrijving" class="form-control" type="text" @bind="artiest.Beschrijving" required />
+        </div>
+
+        <div class="form-group">
+            <label for="afbeelding">Afbeelding:</label>
+            <input id="afbeelding" class="form-control" type="text" @bind="artiest.Afbeelding" required />
+        </div>
+
+        <div class="form-group">
+            <label for="landVanHerkomst">Land van Herkomst:</label>
+            <input id="landVanHerkomst" class="form-control" type="text" @bind="artiest.LandVanHerkomst" required />
+        </div>
+
+        <div class="form-group">
+            <label for="type">Type:</label>
+            <input id="type" class="form-control" type="text" @bind="artiest.Type" required />
+        </div>
+
+        <div class="form-group">
+            <label for="genre">Genre:</label>
+            <input id="genre" class="form-control" type="text" @bind="artiest.Genre" required />
+        </div>
+
+        <button class="btn btn-primary" type="submit">Update</button>
+    </form>
+}
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="error-message">@errorMessage</div>
+}
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    private Artiest artiest;
+    private string errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        artiest = await httpClient.GetFromJsonAsync<Artiest>($"/api/Artiesten/{Id}");
+    }
+
+    private async Task UpdateArtiestAsync()
+    {
+        HttpResponseMessage response = await httpClient.PutAsJsonAsync($"/api/Artiesten/{Id}", artiest);
+        if (response.IsSuccessStatusCode)
+        {
+            // Handle successful update
+            navigationManager.NavigateTo("/artiesten");
+        }
+        else
+        {
+            // Handle error
+            errorMessage = "Failed to update artist. Please try again.";
+        }
+    }
+}

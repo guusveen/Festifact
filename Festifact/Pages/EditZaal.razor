@@ -38,7 +38,7 @@ else
     private string errorMessage;
 
     [Parameter]
-    public int Id { get; set; }
+    public string Id { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -63,7 +63,7 @@ else
         if (response.IsSuccessStatusCode)
         {
             // Handle successful update
-            navigationManager.NavigateTo($"/edit-zaal/{Id}");
+            navigationManager.NavigateTo("locaties");
         }
         else
         {
