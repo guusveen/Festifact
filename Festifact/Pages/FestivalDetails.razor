@@ -1,0 +1,80 @@
+﻿@page "/festival/{Id}"
+@inject HttpClient httpClient
+@using Festifact.Models
+@using System.Net.Http.Json
+
+<h3>Festival Details</h3>
+
+<div>
+    <p><strong>Naam:</strong> @festival.Naam</p>
+</div>
+
+<div>
+    <p><strong>Beschrijving:</strong> @festival.Beschrijving</p>
+</div>
+
+<div>
+    <img src="@festival.BannerAfbeelding" alt="Festival Banner" class="img-fluid" />
+</div>
+
+<div>
+    <p><strong>Type:</strong> @festival.Type</p>
+</div>
+
+<div>
+    <p><strong>Genre:</strong> @festival.Genre</p>
+</div>
+
+<div>
+    <p><strong>Leeftijdscategorie Van:</strong> @festival.LeeftijdscategorieVan</p>
+</div>
+
+<div>
+    <p><strong>Leeftijdscategorie Tot:</strong> @festival.LeeftijdscategorieTot</p>
+</div>
+
+<div>
+    <p><strong>Start Datum:</strong> @festival.StartDatum?.ToString("yyyy-MM-dd")</p>
+</div>
+
+<div>
+    <p><strong>Eind Datum:</strong> @festival.EindDatum?.ToString("yyyy-MM-dd")</p>
+</div>
+
+<div>
+    <p><strong>Voorstellingen:</strong></p>
+    @if (festival.Voorstellingen != null)
+    {
+    <ul>
+        @foreach (var voorstelling in festival.Voorstellingen)
+        {
+            <li><a href="/voorstelling/@voorstelling.Id.ToString()">@voorstelling.Naam</a></li>
+        }
+    </ul>
+    }
+</div>
+
+<div>
+    <p><strong>Locaties:</strong></p>
+    @if (festival.Locaties != null)
+    {
+    <ul>
+        @foreach (var locatie in festival.Locaties)
+        {
+            <li>@locatie.Naam</li>
+        }
+    </ul>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    private Festival festival = new Festival();
+
+    protected override async Task OnInitializedAsync()
+    {
+        festival = await httpClient.GetFromJsonAsync<Festival>($"/api/Festivals/{Id}");
+    }
+}

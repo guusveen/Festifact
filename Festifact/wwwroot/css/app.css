@@ -99,4 +99,8 @@ ul {
     padding-bottom: 1rem;
 }
 
-
+.card-deck
+{
+    padding-top: 1rem;
+    padding-bottom: 1rem
+}

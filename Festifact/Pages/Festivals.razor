@@ -1,0 +1,154 @@
+﻿@page "/festivals"
+@inject HttpClient httpClient
+@using Festifact.Models
+@using System.Net.Http.Json
+
+<h3>Festival List</h3>
+
+<div class="row">
+    <div class="col-md-3">
+        <label for="filterType">Type:</label>
+        <select class="form-control" id="filterType" @onchange="FilterByType">
+            <option value="">All</option>
+            @if (UniqueTypes != null)
+            {
+                @foreach (var type in UniqueTypes)
+                {
+                    <option value="@type">@type</option>
+                }
+            }
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <label for="filterGenre">Genre:</label>
+        <select class="form-control" id="filterGenre" @onchange="FilterByGenre">
+            <option value="">All</option>
+            @if (UniqueGenres != null)
+            {
+                @foreach (var genre in UniqueGenres)
+                {
+                    <option value="@genre">@genre</option>
+                }
+            }
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <label for="filterLocatie">Locatie:</label>
+        <select class="form-control" id="filterLocatie" @onchange="FilterByLocatie">
+            <option value="">All</option>
+            @if (UniqueLocaties != null)
+            {
+                @foreach (var locatie in UniqueLocaties)
+                {
+                    <option value="@locatie.Naam">@locatie.Naam</option>
+                }
+            }
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <label for="filterDatum">Datum:</label>
+        <input class="form-control" type="date" id="filterDatum" @onchange="FilterByDatum" />
+    </div>
+</div>
+
+@if (filteredFestivals == null)
+{
+    <p>Loading festivals...</p>
+}
+else if (filteredFestivals.Count == 0)
+{
+    <p>No festivals found.</p>
+}
+else
+{
+    <div class="card-deck">
+        @foreach (var festival in filteredFestivals)
+        {
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <a href="/festival/@festival.Id">@festival.Naam</a>
+                    </h5>
+                    <p class="card-text">
+                        Type: @festival.Type<br />
+                        Start Datum: @festival.StartDatum?.ToString("yyyy-MM-dd")
+                    </p>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<Festival> festivals;
+    private List<Festival> filteredFestivals;
+    private string selectedType;
+    private string selectedGenre;
+    private string selectedLocatie;
+    private DateTime? selectedDatum;
+
+    protected override async Task OnInitializedAsync()
+    {
+        festivals = await httpClient.GetFromJsonAsync<List<Festival>>("/api/Festivals");
+        filteredFestivals = festivals;
+    }
+
+    private IEnumerable<string> UniqueTypes => festivals?.Select(f => f.Type).Distinct();
+    private IEnumerable<string> UniqueGenres => festivals?.Select(f => f.Genre).Distinct();
+    private IEnumerable<Locatie> UniqueLocaties => festivals?.SelectMany(f => f.Locaties)?.Distinct().ToList();
+
+    private void FilterByType(ChangeEventArgs e)
+    {
+        selectedType = e.Value.ToString();
+        ApplyFilters();
+    }
+
+    private void FilterByGenre(ChangeEventArgs e)
+    {
+        selectedGenre = e.Value.ToString();
+        ApplyFilters();
+    }
+
+    private void FilterByLocatie(ChangeEventArgs e)
+    {
+        selectedLocatie = e.Value.ToString();
+        ApplyFilters();
+    }
+
+    private void FilterByDatum(ChangeEventArgs e)
+    {
+        if (DateTime.TryParse(e.Value.ToString(), out var selectedDate))
+        {
+            selectedDatum = selectedDate.Date;
+            ApplyFilters();
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        filteredFestivals = festivals;
+
+        if (!string.IsNullOrEmpty(selectedType))
+        {
+            filteredFestivals = filteredFestivals.Where(f => f.Type == selectedType).ToList();
+        }
+
+        if (!string.IsNullOrEmpty(selectedGenre))
+        {
+            filteredFestivals = filteredFestivals.Where(f => f.Genre == selectedGenre).ToList();
+        }
+
+        if (!string.IsNullOrEmpty(selectedLocatie))
+        {
+            filteredFestivals = filteredFestivals.Where(f => f.Locaties.Any(l => l.Naam == selectedLocatie)).ToList();
+        }
+
+        if (selectedDatum.HasValue)
+        {
+            filteredFestivals = filteredFestivals.Where(f => f.StartDatum?.Date == selectedDatum.Value).ToList();
+        }
+    }
+}

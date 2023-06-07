@@ -1,0 +1,48 @@
+﻿@page "/favoritevoorstellingen/{Id}"
+@inject HttpClient httpClient
+@using Festifact.Models
+@using System.Net.Http.Json
+
+<h3>Favorite Voorstellingen</h3>
+
+@if (favoriteVoorstellingen == null)
+{
+    <p>Loading favorite performances...</p>
+}
+else
+{
+    <div class="card-deck">
+        @foreach (var voorstelling in favoriteVoorstellingen)
+        {
+            <div class="card">
+                <img src="@voorstelling.Afbeelding" class="card-img-top" alt="@voorstelling.Naam">
+                <div class="card-body">
+                    <h5 class="card-title">@voorstelling.Naam</h5>
+                    <p class="card-text">Start Time: @voorstelling.StartTijd</p>
+                    <p class="card-text">End Time: @voorstelling.EindTijd</p>
+                    <p class="card-text">Location: @voorstelling.Zaal.Locatie.Naam</p>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    private List<Voorstelling> favoriteVoorstellingen;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            favoriteVoorstellingen = await httpClient.GetFromJsonAsync<List<Voorstelling>>($"/api/VoorstellingFavorieten/FavoriteVoorstellingen/{Id}");
+        }
+        catch (Exception ex)
+        {
+            // Handle exception
+            Console.WriteLine(ex.Message);
+        }
+    }
+}

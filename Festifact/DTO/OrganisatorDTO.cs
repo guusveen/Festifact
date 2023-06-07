@@ -1,13 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Festifact.Models;
 
-namespace Festifact.Models
+namespace Festifact.DTO
 {
-    public class Organisator
+    public class OrganisatorDTO
     {
         public int? Id { get; set; }
         public string? Name { get; set; }
         public string? Email { get; set; }
-        public string? Password { get; set; }
         // Navigation properties
         public virtual ICollection<Festival>? Festivals { get; set; }
     }

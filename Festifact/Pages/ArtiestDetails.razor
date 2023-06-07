@@ -1,0 +1,104 @@
+﻿@page "/artiest/{Id}"
+@inject HttpClient httpClient
+@using Festifact.Models
+@using System.Net.Http.Json
+
+<h3>Artiest Details</h3>
+
+<div>
+    <p><strong>Naam:</strong> @artiest.Naam</p>
+</div>
+
+<div>
+    <p><strong>Beschrijving:</strong> @artiest.Beschrijving</p>
+</div>
+
+<div>
+    <img src="@artiest.Afbeelding" alt="Artiest Afbeelding" class="img-fluid" />
+</div>
+
+<div>
+    <p><strong>Land van Herkomst:</strong> @artiest.LandVanHerkomst</p>
+</div>
+
+<div>
+    <p><strong>Type:</strong> @artiest.Type</p>
+</div>
+
+<div>
+    <p><strong>Genre:</strong> @artiest.Genre</p>
+</div>
+
+@if (IsInArtiestFavorieten)
+{
+    <button class="btn btn-danger" @onclick="RemoveFromArtiestFavorieten">Remove from Artiest Favorieten</button>
+}
+else
+{
+    <button class="btn btn-primary" @onclick="AddToArtiestFavorieten">Add to Artiest Favorieten</button>
+}
+
+@if (artiest.Voorstellingen != null)
+{
+    <h4>Voorstellingen</h4>
+    <ul>
+        @foreach (var voorstelling in artiest.Voorstellingen)
+        {
+            <li><a href="/voorstelling/@voorstelling.Id">@voorstelling.Naam</a></li>
+        }
+    </ul>
+}
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    private Artiest artiest = new Artiest();
+    private bool IsInArtiestFavorieten = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        artiest = await httpClient.GetFromJsonAsync<Artiest>($"/api/Artiesten/{Id}");
+        // Check if the Artiest is in ArtiestFavorieten
+        var bezoekerId = Preferences.Get("LoggedInUserId", string.Empty);
+        var artiestFavoriet = new ArtiestFavoriet
+            {
+                BezoekerId = int.Parse(bezoekerId),
+                ArtiestId = artiest.Id
+            };
+
+        var response = await httpClient.GetAsync($"/api/ArtiestFavorieten/HasFavorite/{artiestFavoriet.BezoekerId}/{artiestFavoriet.ArtiestId}");
+        IsInArtiestFavorieten = response.IsSuccessStatusCode && bool.Parse(await response.Content.ReadAsStringAsync());
+
+    }
+
+    private async Task AddToArtiestFavorieten()
+    {
+        var bezoekerId = Preferences.Get("LoggedInUserId", string.Empty);
+        ArtiestFavoriet artiestFavoriet = new ArtiestFavoriet
+            {
+                ArtiestId = artiest.Id,
+                BezoekerId = int.Parse(bezoekerId)
+            };
+
+        HttpResponseMessage response = await httpClient.PostAsJsonAsync("/api/ArtiestFavorieten", artiestFavoriet);
+
+        if (response.IsSuccessStatusCode)
+        {
+            IsInArtiestFavorieten = true;
+        }
+    }
+
+    private async Task RemoveFromArtiestFavorieten()
+    {
+        var bezoekerId = Preferences.Get("LoggedInUserId", string.Empty);
+
+        HttpResponseMessage response = await httpClient.DeleteAsync($"/api/ArtiestFavorieten/{bezoekerId}/{artiest.Id}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            IsInArtiestFavorieten = false;
+        }
+    }
+
+}

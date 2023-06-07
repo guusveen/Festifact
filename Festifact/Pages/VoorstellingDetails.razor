@@ -1,0 +1,175 @@
+﻿@page "/voorstelling/{Id}"
+@inject HttpClient httpClient
+@using Festifact.Models
+@using System.Net.Http.Json
+
+<h3>Voorstelling Details</h3>
+
+<div>
+    <p><strong>Naam:</strong> @voorstelling.Naam</p>
+</div>
+
+<div>
+    <p><strong>Beschrijving:</strong> @voorstelling.Beschrijving</p>
+</div>
+
+<div>
+    <img src="@voorstelling.Afbeelding" alt="Voorstelling Afbeelding" class="img-fluid" />
+</div>
+
+@if (voorstelling.Artiest != null)
+{
+    <div>
+        <span><strong>Artiest:</strong> @voorstelling.Artiest?.Naam</span>
+        <a href="/artiest/@(voorstelling.Artiest?.Id)" class="btn btn-secondary">Artiest details</a>
+    </div>
+}
+<div>
+    <p><strong>Start Tijd:</strong> @voorstelling.StartTijd?.ToString("yyyy-MM-dd HH:mm")</p>
+</div>
+
+<div>
+    <p><strong>Eind Tijd:</strong> @voorstelling.EindTijd?.ToString("yyyy-MM-dd HH:mm")</p>
+</div>
+
+<div>
+    <p><strong>Zaal:</strong> @voorstelling.Zaal?.Naam</p>
+</div>
+
+@if (IsInFavorieten)
+{
+    <button class="btn btn-danger" @onclick="RemoveFromFavorieten">Remove from Favorieten</button>
+}
+else
+{
+    <button class="btn btn-primary" @onclick="AddToFavorieten">Add to Favorieten</button>
+}
+
+@if (HasTicket)
+{
+
+    <p>You already have a ticket for this show.</p>
+    @if (!HasRated)
+    {
+        <h4>Rate the Show</h4>
+        <div>
+            <label for="rating">Rating:</label>
+            <select id="rating" @bind="selectedRating">
+                <option value="1">1 star</option>
+                <option value="2">2 stars</option>
+                <option value="3">3 stars</option>
+                <option value="4">4 stars</option>
+                <option value="5">5 stars</option>
+            </select>
+        </div>
+        <div>
+            <label for="comment">Comment:</label>
+            <textarea id="comment" @bind="comment"></textarea>
+        </div>
+        <button class="btn btn-primary" @onclick="SubmitRating">Submit Rating</button>
+    }
+    else
+    {
+        <p>You already rated this show.</p>
+    }
+
+}
+else
+{
+    <button class="btn btn-primary" @onclick="BuyTicket">Buy Ticket</button>
+}
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    private Voorstelling voorstelling = new Voorstelling();
+    private bool IsInFavorieten = false;
+    private bool HasTicket = false;
+
+    private int selectedRating;
+    private string comment;
+    private bool HasRated = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        voorstelling = await httpClient.GetFromJsonAsync<Voorstelling>($"/api/Voorstellings/{Id}");
+
+        // Check if the Voorstelling is in Favorieten
+        var bezoekerId = Preferences.Get("LoggedInUserId", string.Empty);
+        var favoriet = new VoorstellingFavoriet
+            {
+                BezoekerId = int.Parse(bezoekerId),
+                VoorstellingId = voorstelling.Id
+            };
+
+        var response = await httpClient.GetAsync($"/api/VoorstellingFavorieten/HasFavorite/{favoriet.BezoekerId}/{favoriet.VoorstellingId}");
+        IsInFavorieten = response.IsSuccessStatusCode && bool.Parse(await response.Content.ReadAsStringAsync());
+
+        // Check if the user has a ticket for the show
+        var ticketResponse = await httpClient.GetAsync($"/api/Tickets/CheckTicket/{favoriet.BezoekerId}/{favoriet.VoorstellingId}");
+        HasTicket = ticketResponse.IsSuccessStatusCode && bool.Parse(await ticketResponse.Content.ReadAsStringAsync());
+        StateHasChanged();
+    }
+
+    private async Task AddToFavorieten()
+    {
+        var bezoekerId = Preferences.Get("LoggedInUserId", string.Empty);
+        VoorstellingFavoriet voorstellingFavoriet = new VoorstellingFavoriet
+            {
+                VoorstellingId = voorstelling.Id,
+                BezoekerId = int.Parse(bezoekerId)
+            };
+
+        HttpResponseMessage response = await httpClient.PostAsJsonAsync("/api/VoorstellingFavorieten", voorstellingFavoriet);
+
+        if (response.IsSuccessStatusCode)
+        {
+            IsInFavorieten = true;
+        }
+
+    }
+
+    private async Task RemoveFromFavorieten()
+    {
+        var bezoekerId = Preferences.Get("LoggedInUserId", string.Empty);
+
+        HttpResponseMessage response = await httpClient.DeleteAsync($"/api/VoorstellingFavorieten/{bezoekerId}/{voorstelling.Id}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            IsInFavorieten = false;
+        }
+
+    }
+
+    private async Task BuyTicket()
+    {
+        var bezoekerId = Preferences.Get("LoggedInUserId", string.Empty);
+        var ticketResponse = await httpClient.PostAsync($"/api/Tickets/CreateTicket/{bezoekerId}/{voorstelling.Id}", null);
+
+        if (ticketResponse.IsSuccessStatusCode)
+        {
+            HasTicket = true;
+        }
+    }
+
+    private async Task SubmitRating()
+    {
+        var bezoekerId = Preferences.Get("LoggedInUserId", string.Empty);
+        var rating = new Rating
+            {
+                BezoekerId = int.Parse(bezoekerId),
+                VoorstellingId = voorstelling.Id,
+                Score = selectedRating,
+                Opmerking = comment
+            };
+
+        var response = await httpClient.PostAsJsonAsync("/api/Ratings", rating);
+
+        if (response.IsSuccessStatusCode)
+        {
+            HasRated = true;
+        }
+    }
+}

@@ -54,7 +54,16 @@
     </ItemGroup>
 
     <ItemGroup>
-      <MauiXaml Update="PagesMaui\MauiPage1.xaml">
+      <MauiXaml Update="PagesMaui\Login.xaml">
+        <Generator>MSBuild:Compile</Generator>
+      </MauiXaml>
+      <MauiXaml Update="PagesMaui\OrganisatorLogin.xaml">
+        <Generator>MSBuild:Compile</Generator>
+      </MauiXaml>
+      <MauiXaml Update="PagesMaui\OrganisatorRegister.xaml">
+        <Generator>MSBuild:Compile</Generator>
+      </MauiXaml>
+      <MauiXaml Update="PagesMaui\Register.xaml">
         <Generator>MSBuild:Compile</Generator>
       </MauiXaml>
     </ItemGroup>

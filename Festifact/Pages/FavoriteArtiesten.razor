@@ -1,0 +1,46 @@
+﻿@page "/favoriteartiesten/{Id}"
+@inject HttpClient httpClient
+@using Festifact.Models
+@using System.Net.Http.Json
+
+<h3>FavoriteArtiesten</h3>
+
+@if (favoriteArtiesten == null)
+{
+    <p>Loading favorite artists...</p>
+}
+else
+{
+    <div class="card-deck">
+        @foreach (var artiest in favoriteArtiesten)
+        {
+            <div class="card">
+                <img src="@artiest.Afbeelding" class="card-img-top" alt="@artiest.Naam">
+                <div class="card-body">
+                    <h5 class="card-title">@artiest.Naam</h5>
+                    <p class="card-text">@artiest.Genre</p>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    private List<Artiest> favoriteArtiesten;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            favoriteArtiesten = await httpClient.GetFromJsonAsync<List<Artiest>>($"/api/ArtiestFavorieten/FavoriteArtiesten/{Id}");
+        }
+        catch (Exception ex)
+        {
+            // Handle exception
+            Console.WriteLine(ex.Message);
+        }
+    }
+}
