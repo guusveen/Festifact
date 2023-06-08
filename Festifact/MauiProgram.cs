@@ -43,6 +43,9 @@ public static class MauiProgram
         builder.Services.AddSingleton(httpClient);
 
         builder.Services.AddSingleton<OrganisatorService>();
+        builder.Services.AddSingleton<FestivalService>();
+        builder.Services.AddSingleton<ZaalsService>();
+        builder.Services.AddSingleton<BezoekerService>();
 
         return builder.Build();
 	}
