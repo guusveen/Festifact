@@ -36,6 +36,7 @@ else
         try
         {
             favoriteArtiesten = await httpClient.GetFromJsonAsync<List<Artiest>>($"/api/ArtiestFavorieten/FavoriteArtiesten/{Id}");
+            StateHasChanged();
         }
         catch (Exception ex)
         {

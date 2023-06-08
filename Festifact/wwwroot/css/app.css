@@ -9,13 +9,13 @@ h1:focus {
 }
 
 a, .btn-link {
-    color: #0071c1;
+    color: #5FB4D9;
 }
 
 .btn-primary {
     color: #fff;
-    background-color: #1b6ec2;
-    border-color: #1861ac;
+    background-color: #3C97BF;
+    border-color: #B6E3F7;
 }
 
 .content {
@@ -23,7 +23,7 @@ a, .btn-link {
 }
 
 .valid.modified:not([type=checkbox]) {
-    outline: 1px solid #26b050;
+    outline: 1px solid #3C97BF;
 }
 
 .invalid {
@@ -73,7 +73,7 @@ a, .btn-link {
         position: sticky;
         top: 0;
         height: env(safe-area-inset-top);
-        background-color: #f7f7f7;
+        background-color: #B6E3F7;
         width: 100%;
         z-index: 1;
     }
@@ -84,23 +84,17 @@ a, .btn-link {
 }
 
 /*my styles*/
-form {
-    padding-bottom: 2rem;
-}
-.form-group {
-    margin-bottom: 1rem;
+
+
+img, .img-fluid {
+    height: 15rem;
+    object-fit: contain;
 }
 
-.form-group img
-{
-    max-height: 200px;
-}
-ul {
-    padding-bottom: 1rem;
+.navbar-dark .top-row {
+    background-color: #3C97BF;
 }
 
-.card-deck
-{
-    padding-top: 1rem;
-    padding-bottom: 1rem
+.page .sidebar {
+    background-image: linear-gradient(180deg, #3C97BF 50%, #5FB4D9 70%) !important;
 }

@@ -5,6 +5,14 @@
              x:Class="Festifact.MainPage"
              BackgroundColor="{DynamicResource PageBackgroundColor}">
 
+    <NavigationPage.HasNavigationBar>
+        <OnPlatform x:TypeArguments="x:Boolean">
+            <On Platform="Android">False</On>
+            <On Platform="iOS">False</On>
+            <On Platform="UWP">False</On>
+        </OnPlatform>
+    </NavigationPage.HasNavigationBar>
+
     <BlazorWebView x:Name="blazorWebView" HostPage="wwwroot/index.html">
         <BlazorWebView.RootComponents>
             <RootComponent Selector="#app" ComponentType="{x:Type local:Main}" />

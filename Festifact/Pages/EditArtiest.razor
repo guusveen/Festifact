@@ -28,6 +28,10 @@ else
             <input id="afbeelding" class="form-control" type="text" @bind="artiest.Afbeelding" required />
         </div>
 
+        <div>
+            <img src="@artiest.Afbeelding" alt="Artiest Image" class="img-fluid" />
+        </div>
+
         <div class="form-group">
             <label for="landVanHerkomst">Land van Herkomst:</label>
             <input id="landVanHerkomst" class="form-control" type="text" @bind="artiest.LandVanHerkomst" required />

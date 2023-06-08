@@ -16,5 +16,6 @@
         public virtual Festival? Festival { get; set; }
 
         public ICollection<Rating>? Ratings { get; set; }
+        public virtual ICollection<Ticket>? Tickets { get; set; }
     }
 }

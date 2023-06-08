@@ -21,22 +21,22 @@
         {
             <div class="nav-item px-3" style="@(isLoggedIn ? "display: none;" : "")">
                 <NavLink class="nav-link" onclick="@(() => GoToRegisterPage())">
-                    <span class="oi oi-list-rich" aria-hidden="true"></span> Register
+                    <span class="oi oi-person" aria-hidden="true"></span> Register
                 </NavLink>
             </div>
             <div class="nav-item px-3" style="@(isLoggedIn ? "display: none;" : "")">
                 <NavLink class="nav-link" onclick="@(() => GoToLoginPage())">
-                    <span class="oi oi-list-rich" aria-hidden="true"></span> Log in
+                    <span class="oi oi-account-login" aria-hidden="true"></span> Log in
                 </NavLink>
             </div>
             <div class="nav-item px-3" style="@(isLoggedIn ? "display: none;" : "")">
                 <NavLink class="nav-link" onclick="@(() => GoToOrganisatorRegisterPage())">
-                    <span class="oi oi-list-rich" aria-hidden="true"></span> Register organisator
+                    <span class="oi oi-people" aria-hidden="true"></span> Register organisator
                 </NavLink>
             </div>
             <div class="nav-item px-3" style="@(isLoggedIn ? "display: none;" : "")">
                 <NavLink class="nav-link" onclick="@(() => GoToOrganisatorLoginPage())">
-                    <span class="oi oi-list-rich" aria-hidden="true"></span> Log in organisator
+                    <span class="oi oi-account-logout" aria-hidden="true"></span> Log in organisator
                 </NavLink>
             </div>
         }
@@ -44,17 +44,17 @@
         {
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="/festivals">
-                    <span class="oi oi-list-rich" aria-hidden="true"></span> Festivals
+                    <span class="oi oi-list" aria-hidden="true"></span> Festivals
                 </NavLink>
             </div>
             <div class="nav-item px-3">
                 <NavLink class="nav-link" onclick="@(() => GoToFavoriteArtistsPage())">
-                    <span class="oi oi-list-rich" aria-hidden="true"></span> Favorite artists
+                    <span class="oi oi-heart" aria-hidden="true"></span> Favorite artists
                 </NavLink>
             </div>
             <div class="nav-item px-3">
                 <NavLink class="nav-link" onclick="@(() => GoToFavoriteShowsPage())">
-                    <span class="oi oi-list-rich" aria-hidden="true"></span> Favorite shows
+                    <span class="oi oi-star" aria-hidden="true"></span> Favorite shows
                 </NavLink>
             </div>
         }
@@ -62,17 +62,17 @@
         {
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="organisator-artiesten">
-                    <span class="oi oi-list-rich" aria-hidden="true"></span> Edit Artists
+                    <span class="oi oi-pencil" aria-hidden="true"></span> Edit Artists
                 </NavLink>
             </div>
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="locaties">
-                    <span class="oi oi-list-rich" aria-hidden="true"></span> Edit Locations
+                    <span class="oi oi-map" aria-hidden="true"></span> Edit Locations
                 </NavLink>
             </div>
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="organisator-festivals">
-                    <span class="oi oi-list-rich" aria-hidden="true"></span> Edit Festivals
+                    <span class="oi oi-calendar" aria-hidden="true"></span> Edit Festivals
                 </NavLink>
             </div>
         }
@@ -80,12 +80,13 @@
         {
             <div class="nav-item px-3">
                 <a class="nav-link" href="/" @onclick="LogOut">
-                    <span class="oi oi-list-rich" aria-hidden="true"></span> Log out
+                    <span class="oi oi-account-logout" aria-hidden="true"></span> Log out
                 </a>
             </div>
         }
     </nav>
 </div>
+
 
 @code {
     private string bezoekerId;

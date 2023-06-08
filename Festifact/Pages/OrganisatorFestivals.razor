@@ -16,27 +16,40 @@
 }
 else if (festivals.Any())
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Naam</th>
-                <th>Type</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var festival in festivals)
-            {
-                <tr>
-                    <td>@festival.Naam</td>
-                    <td>@festival.Type</td>
-                    <td>
-                        <button class="btn btn-primary" @onclick="() => GoToEditFestival(festival.Id ?? 0)">Edit</button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <div class="card-deck">
+        @foreach (var festival in festivals)
+        {
+            var statistics = CalculateFestivalStatistics(festival);
+
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">@festival.Naam</h5>
+                    <p class="card-text">
+                        Type: @festival.Type<br />
+                        Number of Voorstellingen: @statistics.NumberOfVoorstellingen<br />
+                        Number of Artiesten: @statistics.NumberOfArtiesten<br />
+                        Number of Tickets Bought: @statistics.NumberOfTicketsBought<br />
+                        Number of Tickets Left: @statistics.NumberOfTicketsLeft<br />
+                        Ratings:
+                        @if (statistics.Ratings.Any())
+                        {
+                            <br />
+                            foreach (var rating in statistics.Ratings)
+                            {
+                                <span class="">&nbsp;&nbsp;@rating.Key: @rating.Value</span>
+                                <br />
+                            }
+                        }
+                        else
+                        {
+                            <span class="">No ratings</span>
+                        }
+                    </p>
+                    <button class="btn btn-primary" @onclick="() => GoToEditFestival(festival.Id ?? 0)">Edit</button>
+                </div>
+            </div>
+        }
+    </div>
 }
 else
 {
@@ -45,10 +58,12 @@ else
 
 @code {
     private List<Festival> festivals;
+    private List<Ticket> tickets;
 
     protected override async Task OnInitializedAsync()
     {
         festivals = await httpClient.GetFromJsonAsync<List<Festival>>("/api/Festivals");
+        tickets = await httpClient.GetFromJsonAsync<List<Ticket>>("/api/Tickets");
     }
 
     private void GoToEditFestival(int festivalId)
@@ -57,6 +72,39 @@ else
         {
             navigationManager.NavigateTo($"/edit-festival/{festivalId}");
         }
+    }
+
+    private FestivalStatistics CalculateFestivalStatistics(Festival festival)
+    {
+        var statistics = new FestivalStatistics
+            {
+                NumberOfVoorstellingen = festival.Voorstellingen.Count,
+                NumberOfArtiesten = festival.Voorstellingen.Select(v => v.ArtiestId).Distinct().Count(),
+                NumberOfTicketsBought = tickets.Count(t => t.VoorstellingId == festival.Id),
+                NumberOfTicketsLeft = festival.Voorstellingen.Sum(v => v.Zaal?.Capaciteit ?? 0) - tickets.Count(t => t.VoorstellingId == festival.Id),
+                Ratings = new Dictionary<int, int>()
+            };
+
+        foreach (var voorstelling in festival.Voorstellingen)
+        {
+            if (voorstelling.Ratings != null)
+            {
+                foreach (var rating in voorstelling.Ratings)
+                {
+                    var score = rating.Score ?? 0;
+                    if (statistics.Ratings.ContainsKey(score))
+                    {
+                        statistics.Ratings[score]++;
+                    }
+                    else
+                    {
+                        statistics.Ratings[score] = 1;
+                    }
+                }
+            }
+        }
+
+        return statistics;
     }
 
     private void CreateNewFestival()

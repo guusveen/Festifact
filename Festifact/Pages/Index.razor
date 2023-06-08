@@ -1,7 +1,14 @@
 ﻿@page "/"
+@inject HttpClient httpClient
+@using Festifact.Models
 
-<h1>Hello, world!</h1>
+<h1 class="display-4 text-center">Welcome to Festifact!</h1>
+<p class="lead text-center">Explore and manage festivals with ease.</p>
 
-Welcome to your new app.
+@code {
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+    protected override async Task OnInitializedAsync()
+    {
+    }
+
+}
