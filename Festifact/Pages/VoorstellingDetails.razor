@@ -74,9 +74,14 @@ else
     }
 
 }
+else if (voorstelling.Zaal != null && TicketsBoughtCount < voorstelling.Zaal.Capaciteit)
+{
+    <p>@TicketsLeft tickets left</p>
+    <button class="btn btn-primary" @onclick="BuyTicket">Buy Ticket</button>
+}
 else
 {
-    <button class="btn btn-primary" @onclick="BuyTicket">Buy Ticket</button>
+    <p>Sorry, the show is sold out.</p>
 }
 
 @code {
@@ -86,6 +91,10 @@ else
     private Voorstelling voorstelling = new Voorstelling();
     private bool IsInFavorieten = false;
     private bool HasTicket = false;
+    private int TicketsBoughtCount = 0;
+    int TicketsLeft = 0;
+
+
 
     private int selectedRating;
     private string comment;
@@ -109,6 +118,21 @@ else
         // Check if the user has a ticket for the show
         var ticketResponse = await httpClient.GetAsync($"/api/Tickets/CheckTicket/{favoriet.BezoekerId}/{favoriet.VoorstellingId}");
         HasTicket = ticketResponse.IsSuccessStatusCode && bool.Parse(await ticketResponse.Content.ReadAsStringAsync());
+
+        // Get the number of tickets bought for the show
+        var ticketsBoughtResponse = await httpClient.GetAsync($"/api/Tickets/CountBoughtTickets/{voorstelling.Id}");
+        if (ticketsBoughtResponse.IsSuccessStatusCode)
+        {
+            TicketsBoughtCount = int.Parse(await ticketsBoughtResponse.Content.ReadAsStringAsync());
+            if (voorstelling.Zaal != null && voorstelling.Zaal.Capaciteit.HasValue)
+            {
+                TicketsLeft = voorstelling.Zaal.Capaciteit.Value - TicketsBoughtCount;
+            }
+        }
+
+        // Check if the user rated the show
+        var ratingResponse = await httpClient.GetAsync($"/api/Ratings/{bezoekerId}/{voorstelling.Id}");
+        HasRated = ratingResponse.IsSuccessStatusCode && ratingResponse.Content.ReadFromJsonAsync<Rating>() != null;
         StateHasChanged();
     }
 
