@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Festifact.Services
 {
-    internal class OrganisatorService
+    public class OrganisatorService
     {
         private readonly HttpClient _httpClient;
 
@@ -56,14 +56,14 @@ namespace Festifact.Services
         public async Task<HttpResponseMessage> UpdateOrganisatorAsync(int id, Organisator organisator)
         {
             var response = await _httpClient.PutAsJsonAsync($"/api/organisators/{id}", organisator);
-            response.EnsureSuccessStatusCode();
+            //response.EnsureSuccessStatusCode();
             return response;
         }
 
         public async Task<HttpResponseMessage> DeleteOrganisatorAsync(int id)
         {
             var response = await _httpClient.DeleteAsync($"/api/organisators/{id}");
-            response.EnsureSuccessStatusCode();
+            //response.EnsureSuccessStatusCode();
             return response;
         }
     }

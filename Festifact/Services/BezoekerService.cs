@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Festifact.Services
 {
-    internal class BezoekerService
+    public class BezoekerService
     {
         private readonly HttpClient _httpClient;
 
