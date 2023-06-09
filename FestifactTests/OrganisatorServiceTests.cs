@@ -20,7 +20,7 @@ namespace FestifactTests
         public OrganisatorServiceTests()
         {
             _mockHttpClient = new Mock<MockHttpClient>();
-            _organisatorService = new OrganisatorService(_mockHttpClient.Object);
+            //_organisatorService = new OrganisatorService(_mockHttpClient.Object);
         }
 
         [Fact]
