@@ -30,5 +30,18 @@ namespace Festifact.Services
             HttpResponseMessage response = await httpClient.PutAsJsonAsync($"/api/Festivals/{id}", festival);
             return response.IsSuccessStatusCode;
         }
+
+        public async Task<Festival> CreateFestivalAsync(Festival festival)
+        {
+            HttpResponseMessage response = await httpClient.PostAsJsonAsync("/api/Festivals", festival);
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<Festival>();
+            }
+            else
+            {
+                return null;
+            }
+        }
     }
 }

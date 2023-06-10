@@ -1,129 +1,90 @@
 ﻿@page "/create-festival"
 @inject HttpClient httpClient
 @inject NavigationManager navigationManager
+@inject FestivalService festivalService
 @using Festifact.Models
+@using Festifact.ViewModels
 @using Festifact.Services
 @using System.Net.Http.Json
+@inherits ComponentBase
 
 <h3>Create Festival</h3>
 
 <form @onsubmit="CreateFestivalAsync" class="needs-validation" novalidate>
     <div class="form-group">
         <label for="naam">Naam:</label>
-        <input id="naam" class="form-control" type="text" @bind="festival.Naam" required />
+        <input id="naam" class="form-control" type="text" @bind="viewModel.Festival.Naam" required />
         <div class="invalid-feedback">Naam is verplicht.</div>
     </div>
 
     <div class="form-group">
         <label for="beschrijving">Beschrijving:</label>
-        <input id="beschrijving" class="form-control" type="text" @bind="festival.Beschrijving" required />
+        <input id="beschrijving" class="form-control" type="text" @bind="viewModel.Festival.Beschrijving" required />
         <div class="invalid-feedback">Beschrijving is verplicht.</div>
     </div>
 
     <div class="form-group">
         <label for="bannerAfbeelding">Banner Afbeelding:</label>
-        <input id="bannerAfbeelding" class="form-control" type="text" @bind="festival.BannerAfbeelding" required />
+        <input id="bannerAfbeelding" class="form-control" type="text" @bind="viewModel.Festival.BannerAfbeelding" required />
         <div class="invalid-feedback">Banner Afbeelding is verplicht.</div>
     </div>
 
     <div class="form-group">
         <label for="type">Type:</label>
-        <input id="type" class="form-control" type="text" @bind="festival.Type" required />
+        <input id="type" class="form-control" type="text" @bind="viewModel.Festival.Type" required />
         <div class="invalid-feedback">Type is verplicht.</div>
     </div>
 
     <div class="form-group">
         <label for="genre">Genre:</label>
-        <input id="genre" class="form-control" type="text" @bind="festival.Genre" required />
+        <input id="genre" class="form-control" type="text" @bind="viewModel.Festival.Genre" required />
         <div class="invalid-feedback">Genre is verplicht.</div>
     </div>
 
     <div class="form-group">
         <label for="leeftijdscategorieVan">Leeftijdscategorie Van:</label>
-        <input id="leeftijdscategorieVan" class="form-control" type="number" @bind="festival.LeeftijdscategorieVan" required />
+        <input id="leeftijdscategorieVan" class="form-control" type="number" @bind="viewModel.Festival.LeeftijdscategorieVan" required />
         <div class="invalid-feedback">Leeftijdscategorie Van is verplicht.</div>
     </div>
 
     <div class="form-group">
         <label for="leeftijdscategorieTot">Leeftijdscategorie Tot:</label>
-        <input id="leeftijdscategorieTot" class="form-control" type="number" @bind="festival.LeeftijdscategorieTot" required />
+        <input id="leeftijdscategorieTot" class="form-control" type="number" @bind="viewModel.Festival.LeeftijdscategorieTot" required />
         <div class="invalid-feedback">Leeftijdscategorie Tot is verplicht.</div>
     </div>
 
+
     <div class="form-group">
         <label for="startDatum">Start Datum:</label>
-        <input type="date" class="form-control" id="startDatum" @bind="festival.StartDatum" required />
+        <input type="date" class="form-control" id="startDatum" @bind="viewModel.Festival.StartDatum" required />
         <div class="invalid-feedback">Start Datum is verplicht.</div>
     </div>
 
     <div class="form-group">
         <label for="eindDatum">Eind Datum:</label>
-        <input type="date" class="form-control" id="eindDatum" @bind="festival.EindDatum" required />
+        <input type="date" class="form-control" id="eindDatum" @bind="viewModel.Festival.EindDatum" required />
         <div class="invalid-feedback">Eind Datum is verplicht.</div>
     </div>
-    
-    @if (locaties != null)
-    {
-        <div class="form-group">
-            <label for="locaties">Locaties:</label>
-                <select id="locaties" class="form-control" multiple required>
-                @foreach (var locatie in locaties)
-                {
-                    <option value="@locatie.Id" selected="@IsLocatieSelected(locatie)" @onchange="HandleLocatieSelection">@locatie.Naam</option>
-                }
-                </select>
-            <div class="invalid-feedback">Locaties is verplicht.</div>
-        </div>
-    }
-    else
-    {
-        <div>No locaties found.</div>
-    }
+
     <button class="btn btn-primary" type="submit">Create</button>
 </form>
 
-@if (!string.IsNullOrEmpty(errorMessage))
+@if (!string.IsNullOrEmpty(viewModel.ErrorMessage))
 {
-    <div class="error-message">@errorMessage</div>
+    <div class="error-message">@viewModel.ErrorMessage</div>
 }
 
 @code {
-    private Festival festival = new Festival();
-    private List<int> selectedLocatieIds = new List<int>();
-    private string errorMessage;
-    private List<Locatie> locaties;
+    private CreateFestivalViewModel viewModel;
 
     protected override async Task OnInitializedAsync()
     {
-        locaties = await httpClient.GetFromJsonAsync<List<Locatie>>("/api/Locaties");
+        viewModel = new CreateFestivalViewModel(httpClient, navigationManager, festivalService);
     }
 
     private async Task CreateFestivalAsync()
     {
-        festival.Locaties = locaties.Where(l => selectedLocatieIds.Contains(l.Id ?? 0)).ToList();
-
-        HttpResponseMessage response = await httpClient.PostAsJsonAsync("/api/Festivals", festival);
-        if (response.IsSuccessStatusCode)
-        {
-            // Handle successful creation
-            var createdFestival = await response.Content.ReadFromJsonAsync<Festival>();
-            navigationManager.NavigateTo($"/edit-festival/{createdFestival.Id}");
-        }
-        else
-        {
-            // Handle error
-            errorMessage = "Failed to create Festival. Please try again.";
-        }
-    }
-
-    private bool IsLocatieSelected(Locatie locatie)
-    {
-        return selectedLocatieIds.Contains(locatie.Id ?? 0);
-    }
-
-    private void HandleLocatieSelection(ChangeEventArgs e)
-    {
-        var selectedValues = e.Value.ToString().Split(',');
-        selectedLocatieIds = selectedValues.Select(int.Parse).ToList();
+        await viewModel.CreateFestivalAsync();
+        StateHasChanged();
     }
 }
