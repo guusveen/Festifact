@@ -98,7 +98,7 @@ else
 
     private IEnumerable<string> UniqueTypes => festivals?.Select(f => f.Type).Distinct();
     private IEnumerable<string> UniqueGenres => festivals?.Select(f => f.Genre).Distinct();
-    private IEnumerable<Locatie> UniqueLocaties => festivals?.SelectMany(f => f.Locaties)?.Distinct().ToList();
+    private IEnumerable<Locatie> UniqueLocaties => festivals?.SelectMany(f => f.Locaties)?.DistinctBy(l => l.Id)?.ToList();
 
     private void FilterByType(ChangeEventArgs e)
     {
@@ -148,7 +148,9 @@ else
 
         if (selectedDatum.HasValue)
         {
-            filteredFestivals = filteredFestivals.Where(f => f.StartDatum?.Date == selectedDatum.Value).ToList();
+            filteredFestivals = filteredFestivals
+                .Where(f => f.StartDatum?.Date <= selectedDatum.Value && f.EindDatum?.Date >= selectedDatum.Value)
+                .ToList();
         }
     }
 }
